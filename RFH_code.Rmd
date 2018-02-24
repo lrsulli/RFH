@@ -1,16 +1,105 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title: "RFH Board Fellow Project"
+last updated: 2/23/18
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
-```{r}
-plot(cars)
+```{r Setup}
+# Libraries
+library(readxl)
+library(dplyr)
+library(moments)
+library(stringr)
+library(scales)
+library(ggplot2)
+library(jsonlite)
+library(utils)
+library(rgdal)
+library(readstata13)
+library(RColorBrewer)
+library(classInt)
+library(ggmap)
+library(googleway)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+```{r Import Data}
+# Survey data set from 2/21/18
+temp = tempfile(fileext = '.xlsx')
+dataURL <- "https://github.com/lrsulli/RFH/raw/master/survey_data_02212018.xlsx"
+download.file(dataURL, destfile = temp, mode = 'wb')
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
+data = read_excel(temp, sheet = 1)
+head(data, 4)
+```
+
+```{r Import Map}
+compressedMap = "https://github.com/lrsulli/RFH/raw/master/County_Boundaries_Washington.zip"
+```
+
+```{r}
+temp=tempfile()
+download.file(compressedMap, temp)
+unzip(temp)
+```
+
+```{r}
+(maps=list.files(pattern = 'shp'))
+```
+
+```{r}
+waMap <- rgdal::readOGR("County_Boundaries_Washington.shp", stringsAsFactors=F)
+```
+
+
+
+```{r}
+numberOfClasses = 5
+colorForScale='YlGnBu'
+colors = brewer.pal(numberOfClasses, colorForScale)
+intervals <- classIntervals(varToPLot, numberOfClasses, 
+                            style = "quantile",
+                            dataPrecision=2)
+colorPallette <- findColours(intervals, colors)
+```
+
+
+```{r}
+legendText="Nothing"
+shrinkLegend=0.8
+title="Poverty Rate by Census Tract"
+shrinkPoints=0.5
+
+plot(waMap, col = 'grey')
+plot(waMap, col = 'grey', main=title ,border='black',add=T)
+
+points(data$lon, data$lat, col = "red", pch =19, cex = shrinkPoints)
+```
+
+
+```{r}
+names(data)[4] <- "address"
+
+# Got code from https://qanda.science/r/3956223_batch-geocoding-with-googleway-r-how-to.jsp
+
+api_key = "AIzaSyC2uRbBeIFBwdSiH6KH69Stx_TUoqPN0bY"
+
+res <- apply(data, 1, function(x){
+  google_geocode(address = x[['address']],
+                 key = api_key)
+})
+
+data$location <- lapply(res, function(x){
+  x$results$geometry$location
+})
+
+# Create lat and lon variables
+data$location = as.character(data$location)
+
+data <- mutate(data, lat = substr(location, 12, 21))
+data <- mutate(data, lon = substr(location, 30, 41))
+
+map_address <- merge(data_address, data, by.x='STUDYID', by.y='id')
+
+map_address = map_address[,c('STUDYID','lat','lon')]
+
+write.csv(map_address, "geocoded_addresses.csv")
+```
