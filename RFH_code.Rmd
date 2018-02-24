@@ -68,11 +68,16 @@ shrinkLegend=0.8
 title="Poverty Rate by Census Tract"
 shrinkPoints=0.5
 
-plot(waMap, col = 'grey')
-plot(waMap, col = 'grey', main=title ,border='black',add=T)
+plot(waMap_new, col = 'grey')
+plot(waMap_new, col = 'grey', main=title ,border='black',add=T)
 
 points(data$lon, data$lat, col = "red", pch =19, cex = shrinkPoints)
 ```
+
+```{r}
+waMap_new <- spTransform(waMap, CRS("+init=epsg:4326"))
+```
+
 
 
 ```{r}
