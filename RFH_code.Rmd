@@ -32,7 +32,7 @@ head(data, 4)
 ```
 
 ```{r Import Map}
-compressedMap = "https://github.com/lrsulli/RFH/raw/master/County_Boundaries_Washington.zip"
+compressedMap = "https://github.com/lrsulli/RFH/raw/master/cb_2016_53_cousub_500k.zip"
 ```
 
 ```{r}
@@ -46,7 +46,7 @@ unzip(temp)
 ```
 
 ```{r}
-waMap <- rgdal::readOGR("County_Boundaries_Washington.shp", stringsAsFactors=F)
+waMap <- rgdal::readOGR("cb_2016_53_cousub_500k.shp" , stringsAsFactors=F)
 ```
 
 
@@ -66,19 +66,13 @@ colorPallette <- findColours(intervals, colors)
 legendText="Nothing"
 shrinkLegend=0.8
 title="Poverty Rate by Census Tract"
-shrinkPoints=0.5
+shrinkPoints=0.2
 
-plot(waMap_new, col = 'grey')
-plot(waMap_new, col = 'grey', main=title ,border='black',add=T)
+plot(waMap, col = 'grey')
+plot(waMap, col = 'grey', main=title ,border='grey',add=T)
 
 points(data$lon, data$lat, col = "red", pch =19, cex = shrinkPoints)
 ```
-
-```{r}
-waMap_new <- spTransform(waMap, CRS("+init=epsg:4326"))
-```
-
-
 
 ```{r}
 names(data)[4] <- "address"
@@ -102,9 +96,5 @@ data$location = as.character(data$location)
 data <- mutate(data, lat = substr(location, 12, 21))
 data <- mutate(data, lon = substr(location, 30, 41))
 
-map_address <- merge(data_address, data, by.x='STUDYID', by.y='id')
-
-map_address = map_address[,c('STUDYID','lat','lon')]
-
-write.csv(map_address, "geocoded_addresses.csv")
+write.csv(data, "geocoded_addresses.csv")
 ```
