@@ -66,12 +66,12 @@ colorPallette <- findColours(intervals, colors)
 legendText="Nothing"
 shrinkLegend=0.8
 title="Poverty Rate by Census Tract"
-shrinkPoints=0.2
+shrinkPoints=0.3
 
 plot(waMap, col = 'grey')
 plot(waMap, col = 'grey', main=title ,border='grey',add=T)
 
-points(data$lon, data$lat, col = "red", pch =19, cex = shrinkPoints)
+points(data$lon, data$lat, col = "purple", pch =19, cex = shrinkPoints)
 ```
 
 ```{r}
